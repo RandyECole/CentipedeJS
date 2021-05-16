@@ -65,12 +65,9 @@ var trains = [];
 //  check if node broken and make new centipede if needed
 //draw
 
-//Mushrooms-x, y, damage
-//Cnetipede-x, y, damage (update xy check collision)
-//bullet- x,y(update y check collision)
-//player-x,y(check collinion)
+//Mush only on grid
 
-
+mushs.push(new Mushroom(50, 50));
 function draw() {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	player.update();
@@ -78,7 +75,7 @@ function draw() {
     shot.update();
     shot.draw();
     //trains update draw
-    //mushs update draw
+    mushs.forEach(mush => {mush.update(); mush.draw();});
 	//window.requestAnimationFrame(draw);
 }
 setInterval(draw, 1);
@@ -96,7 +93,7 @@ function shoot(player) {
 
 
 function Entity(xdraw, ydraw, health, damage, priority) {
-    this.x = 0; 
+    this.x = 0;
     this.y = 0;
     this.xdraw = xdraw;
     this.ydraw = ydraw;
@@ -118,7 +115,7 @@ function Entity(xdraw, ydraw, health, damage, priority) {
 }
 
 function Player() {
-	Entity.call(this, 5, 5, 1, 0, 0);
+	Entity.call(this, 10, 10, 1, 0, 0);
 	this.x = canvas.width/2;
 	this.y = canvas.height - 20;
 	this.draw = function() {
@@ -172,8 +169,33 @@ function Bullet(x, y) {
     };
 }
 
-function Mushroom() {
-	Entity.call(this, 5, 5, 4, 0, 1);
+function Mushroom(x, y) {
+	Entity.call(this, 10, 10, 4, 0, 1);
+    this.x = x;
+    this.y = y;
+    this.draw = function() {
+        ctx.beginPath();
+        var rot = (Math.PI*2) * (this.health / 4)
+        ctx.arc(this.x, this.y, 10, 0, rot);
+        ctx.fillStyle = "#11FF00";
+        ctx.fill();
+        ctx.closePath();
+    };
+    this.update = function() {
+        if (this.health <= 0) {
+            var idx = mushs.indexOf(this);
+            mushs.splice(idx, 1);
+            return
+        }
+        if (shot.visible) { //a shot is on screen
+            if ((this.x + this.xdraw) >= shot.x && (this.x - this.xdraw) <= shot.x) { //same col
+                if ((this.y + this.ydraw) >= (shot.y - shot.ydraw) && (this.y - this.ydraw) <= (shot.y + shot.ydraw)) {
+                    shot.visible = false;
+                    this.health -= shot.damage;
+                }
+            }
+        }
+    };
 }
 
 function Segment(){
